@@ -17,11 +17,16 @@ const IMAGE_MIME_TYPES: Record<string, string> = {
   gif: 'image/gif',
 };
 
-function getImageMimeType(uri: string): string | undefined {
+const DEFAULT_IMAGE_MIME_TYPE = 'image/jpeg';
+
+function getImageMimeType(uri: string): string {
   const path = uri.split(/[?#]/)[0];
   const match = path.match(/\.([a-z0-9]+)$/i);
   const ext = match?.[1]?.toLowerCase();
-  return ext ? IMAGE_MIME_TYPES[ext] : undefined;
+  if (ext && ext in IMAGE_MIME_TYPES) {
+    return IMAGE_MIME_TYPES[ext];
+  }
+  return DEFAULT_IMAGE_MIME_TYPE;
 }
 
 export async function saveToPhotos(uri: string): Promise<ExportResult> {
@@ -47,9 +52,8 @@ export async function shareImage(uri: string): Promise<ExportResult> {
   }
 
   try {
-    const mimeType = getImageMimeType(uri);
     await Sharing.shareAsync(uri, {
-      ...(mimeType ? { mimeType } : {}),
+      mimeType: getImageMimeType(uri),
       dialogTitle: 'Share screenshot',
     });
     return { ok: true };
