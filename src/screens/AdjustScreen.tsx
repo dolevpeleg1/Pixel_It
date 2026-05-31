@@ -1,5 +1,5 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Adjust'>;
@@ -9,8 +9,7 @@ export default function AdjustScreen({ navigation, route }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Photo URI (placeholder)</Text>
-      <Text style={styles.uri}>{photoUri}</Text>
+      <Image source={{ uri: photoUri }} style={styles.image} resizeMode="contain" />
       <Text style={styles.hint}>Corner adjustment UI will be added in Step 3.</Text>
       <Pressable
         style={styles.button}
@@ -30,23 +29,21 @@ export default function AdjustScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
+    padding: 16,
     backgroundColor: '#fff',
   },
-  label: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
-  },
-  uri: {
-    fontSize: 14,
-    color: '#111',
+  image: {
+    flex: 1,
+    width: '100%',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
     marginBottom: 16,
   },
   hint: {
     fontSize: 14,
     color: '#888',
-    marginBottom: 24,
+    marginBottom: 16,
+    textAlign: 'center',
   },
   button: {
     backgroundColor: '#111',
@@ -54,6 +51,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 10,
     alignItems: 'center',
+    marginBottom: 8,
   },
   buttonText: {
     color: '#fff',
