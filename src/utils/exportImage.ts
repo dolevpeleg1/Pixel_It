@@ -7,6 +7,23 @@ export type ExportResult =
   | { ok: false; reason: 'sharing_unavailable' }
   | { ok: false; reason: 'error'; message: string };
 
+const IMAGE_MIME_TYPES: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  heic: 'image/heic',
+  heif: 'image/heif',
+  webp: 'image/webp',
+  gif: 'image/gif',
+};
+
+function getImageMimeType(uri: string): string | undefined {
+  const path = uri.split(/[?#]/)[0];
+  const match = path.match(/\.([a-z0-9]+)$/i);
+  const ext = match?.[1]?.toLowerCase();
+  return ext ? IMAGE_MIME_TYPES[ext] : undefined;
+}
+
 export async function saveToPhotos(uri: string): Promise<ExportResult> {
   const { status } = await MediaLibrary.requestPermissionsAsync();
   if (status !== 'granted') {
@@ -30,8 +47,9 @@ export async function shareImage(uri: string): Promise<ExportResult> {
   }
 
   try {
+    const mimeType = getImageMimeType(uri);
     await Sharing.shareAsync(uri, {
-      mimeType: 'image/png',
+      ...(mimeType ? { mimeType } : {}),
       dialogTitle: 'Share screenshot',
     });
     return { ok: true };
