@@ -1,25 +1,53 @@
 {
   "expo": {
-    "name": "Pixel_It",
-    "slug": "Pixel_It",
+    "name": "Pixel It",
+    "slug": "pixel-it",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.pixelit.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Take photos of screens to flatten them into screenshots.",
+        "NSPhotoLibraryUsageDescription": "Choose photos of screens to process.",
+        "NSPhotoLibraryAddUsageDescription": "Save processed screenshots to your photo library."
+      }
     },
     "android": {
+      "package": "com.pixelit.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Choose photos of screens to process.",
+          "cameraPermission": "Take photos of screens to flatten them into screenshots."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Choose photos of screens to process.",
+          "savePhotosPermission": "Save processed screenshots to your photo library."
+        }
+      ]
+    ]
   }
 }
