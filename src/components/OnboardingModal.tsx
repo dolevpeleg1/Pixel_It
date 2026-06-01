@@ -29,7 +29,7 @@ export default function OnboardingModal({ visible, onComplete }: Props) {
 
           <Text style={styles.title}>Welcome to Pixel It</Text>
           <Text style={styles.subtitle}>
-            Turn a photo of any screen into a flat, shareable screenshot.
+            Flatten photos of any screen into a clean, screenshot-like image.
           </Text>
 
           <View style={styles.tips}>

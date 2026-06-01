@@ -12,9 +12,9 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.pixelit.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "Take photos of screens to flatten them into screenshots.",
-        "NSPhotoLibraryUsageDescription": "Choose photos of screens to process.",
-        "NSPhotoLibraryAddUsageDescription": "Save processed screenshots to your photo library.",
+        "NSCameraUsageDescription": "Take photos of screens to flatten them into a screenshot-like image.",
+        "NSPhotoLibraryUsageDescription": "Choose photos of screens to flatten into a screenshot-like image.",
+        "NSPhotoLibraryAddUsageDescription": "Save flattened, screenshot-like images to your photo library.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -47,15 +47,15 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Choose photos of screens to process.",
-          "cameraPermission": "Take photos of screens to flatten them into screenshots."
+          "photosPermission": "Choose photos of screens to flatten into a screenshot-like image.",
+          "cameraPermission": "Take photos of screens to flatten them into a screenshot-like image."
         }
       ],
       [
         "expo-media-library",
         {
-          "photosPermission": "Choose photos of screens to process.",
-          "savePhotosPermission": "Save processed screenshots to your photo library."
+          "photosPermission": "Choose photos of screens to flatten into a screenshot-like image.",
+          "savePhotosPermission": "Save flattened, screenshot-like images to your photo library."
         }
       ]
     ],

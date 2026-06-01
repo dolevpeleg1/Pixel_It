@@ -38,5 +38,5 @@
     "prebuild:ios": "expo prebuild --platform ios && cd ios && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install",
     "web": "expo start --web"
   },
-  "private": true
+  "private": false
 }

@@ -127,7 +127,7 @@ export default function HomeScreen({ navigation }: Props) {
           <NeonAccentBar />
           <Text style={styles.title}>Pixel It</Text>
           <Text style={styles.subtitle}>
-            Turn a photo of any screen into a clean, flat screenshot.
+            Flatten any screen photo into a clean, screenshot-like image.
           </Text>
         </View>
 
