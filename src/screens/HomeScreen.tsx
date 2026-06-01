@@ -47,7 +47,16 @@ export default function HomeScreen({ navigation }: Props) {
         source === 'camera' ? await pickFromCamera() : await pickFromLibrary();
 
       if (result.ok) {
-        navigation.navigate('Adjust', { photoUri: result.uri });
+        navigation.navigate('Adjust', {
+          photoUri: result.uri,
+          imageWidth: result.width,
+          imageHeight: result.height,
+        });
+        return;
+      }
+
+      if (result.reason === 'prepare_failed') {
+        setErrorMessage('Could not prepare that photo. Try another image.');
         return;
       }
 

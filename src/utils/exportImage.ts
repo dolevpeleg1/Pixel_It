@@ -1,5 +1,6 @@
 import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
+import { Platform } from 'react-native';
 
 export type ExportResult =
   | { ok: true }
@@ -29,8 +30,17 @@ function getImageMimeType(uri: string): string {
   return DEFAULT_IMAGE_MIME_TYPE;
 }
 
+async function requestSaveToPhotosPermission(): Promise<MediaLibrary.PermissionResponse> {
+  // iOS: write-only is enough for saveToLibraryAsync (NSPhotoLibraryAddUsageDescription).
+  // Android: default scope matches what saveToLibraryAsync expects on all API levels.
+  if (Platform.OS === 'ios') {
+    return MediaLibrary.requestPermissionsAsync(true);
+  }
+  return MediaLibrary.requestPermissionsAsync();
+}
+
 export async function saveToPhotos(uri: string): Promise<ExportResult> {
-  const { status } = await MediaLibrary.requestPermissionsAsync();
+  const { status } = await requestSaveToPhotosPermission();
   if (status !== 'granted') {
     return { ok: false, reason: 'permission_denied' };
   }

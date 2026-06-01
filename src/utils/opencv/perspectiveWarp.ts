@@ -13,8 +13,10 @@ import {
   outputSizeFromCorners,
   rectToPointVector,
 } from './pointVector';
+import { assertMatHasPixels } from './matValidation';
 
 export function perspectiveWarp(src: Mat, corners: CornerSet): Mat {
+  assertMatHasPixels(src, 'source image');
   const { width, height } = outputSizeFromCorners(corners);
   const srcPoints = cornerSetToPointVector(corners);
   const dstPoints = rectToPointVector(width, height);

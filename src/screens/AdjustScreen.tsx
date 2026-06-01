@@ -1,5 +1,5 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -16,7 +16,7 @@ import { processImage } from '../utils/processImage';
 type Props = NativeStackScreenProps<RootStackParamList, 'Adjust'>;
 
 export default function AdjustScreen({ navigation, route }: Props) {
-  const { photoUri } = route.params;
+  const { photoUri, imageWidth, imageHeight } = route.params;
   const [imageSize, setImageSize] = useState<{
     width: number;
     height: number;
@@ -25,23 +25,50 @@ export default function AdjustScreen({ navigation, route }: Props) {
   const [processing, setProcessing] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [processError, setProcessError] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
+  const processRequestRef = useRef(0);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      processRequestRef.current += 1;
+    };
+  }, []);
 
   useEffect(() => {
     setLoadError(null);
     setImageSize(null);
     setCorners(null);
+    setProcessError(null);
+
+    let isMounted = true;
+
+    setImageSize({ width: imageWidth, height: imageHeight });
+    setCorners(defaultCorners(imageWidth, imageHeight));
 
     Image.getSize(
       photoUri,
       (width, height) => {
-        setImageSize({ width, height });
-        setCorners(defaultCorners(width, height));
+        if (!isMounted) {
+          return;
+        }
+        if (width !== imageWidth || height !== imageHeight) {
+          setImageSize({ width, height });
+          setCorners(defaultCorners(width, height));
+        }
       },
       () => {
-        setLoadError('Could not load image dimensions.');
+        if (isMounted) {
+          setLoadError('Could not load image dimensions.');
+        }
       },
     );
-  }, [photoUri]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [photoUri, imageWidth, imageHeight]);
 
   function handleReset() {
     if (!imageSize) {
@@ -51,26 +78,43 @@ export default function AdjustScreen({ navigation, route }: Props) {
   }
 
   async function handleProcess() {
-    if (!corners) {
+    if (!corners || !isMountedRef.current) {
+      return;
+    }
+
+    const requestId = ++processRequestRef.current;
+    const isActive = () =>
+      isMountedRef.current && processRequestRef.current === requestId;
+
+    if (!isActive()) {
       return;
     }
 
     setProcessError(null);
     setProcessing(true);
+
     try {
       const processedUri = await processImage(photoUri, corners);
+      if (!isActive()) {
+        return;
+      }
       navigation.navigate('Result', {
         originalUri: photoUri,
         processedUri,
       });
     } catch (error) {
+      if (!isActive()) {
+        return;
+      }
       const message =
         error instanceof Error
           ? error.message
           : 'Could not process this image.';
       setProcessError(message);
     } finally {
-      setProcessing(false);
+      if (isActive()) {
+        setProcessing(false);
+      }
     }
   }
 

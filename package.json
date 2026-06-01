@@ -9,6 +9,7 @@
     "expo": "^54",
     "expo-dev-client": "~6.0.21",
     "expo-file-system": "~19.0.23",
+    "expo-image-manipulator": "~14.0.8",
     "expo-image-picker": "~17.0.11",
     "expo-media-library": "~18.2.1",
     "expo-sharing": "~14.0.8",
@@ -31,7 +32,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "ios:dev": "expo start --dev-client --ios",
-    "prebuild:ios": "expo prebuild --platform ios",
+    "prebuild:ios": "expo prebuild --platform ios && cd ios && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install",
     "web": "expo start --web"
   },
   "private": true

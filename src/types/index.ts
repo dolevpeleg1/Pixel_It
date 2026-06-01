@@ -21,6 +21,6 @@ export const CORNER_KEYS: CornerKey[] = [
 
 export type RootStackParamList = {
   Home: undefined;
-  Adjust: { photoUri: string };
+  Adjust: { photoUri: string; imageWidth: number; imageHeight: number };
   Result: { originalUri: string; processedUri: string };
 };
