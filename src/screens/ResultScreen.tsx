@@ -6,17 +6,26 @@ import AppButton from '../components/AppButton';
 import type { RootStackParamList } from '../types';
 import { colors, radii, spacing, typography } from '../theme';
 import { saveToPhotos, shareImage } from '../utils/exportImage';
+import { hapticLight, hapticSuccess } from '../utils/haptics';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Result'>;
+
+type StatusKind = 'success' | 'error' | 'info';
 
 export default function ResultScreen({ navigation, route }: Props) {
   const { originalUri, processedUri } = route.params;
   const [showOriginal, setShowOriginal] = useState(false);
   const [busyAction, setBusyAction] = useState<'save' | 'share' | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [statusKind, setStatusKind] = useState<StatusKind>('info');
 
   const displayUri = showOriginal ? originalUri : processedUri;
   const busy = busyAction !== null;
+
+  function setStatus(message: string, kind: StatusKind) {
+    setStatusMessage(message);
+    setStatusKind(kind);
+  }
 
   async function handleSave() {
     setStatusMessage(null);
@@ -25,19 +34,21 @@ export default function ResultScreen({ navigation, route }: Props) {
     try {
       const result = await saveToPhotos(processedUri);
       if (result.ok) {
-        setStatusMessage('Saved to Photos.');
+        hapticSuccess();
+        setStatus('Saved to Photos.', 'success');
         return;
       }
 
       if (result.reason === 'permission_denied') {
-        setStatusMessage(
+        setStatus(
           'Photo library access is required to save. Enable it in Settings.',
+          'error',
         );
         return;
       }
 
       if (result.reason === 'error') {
-        setStatusMessage(result.message);
+        setStatus(result.message, 'error');
       }
     } finally {
       setBusyAction(null);
@@ -51,21 +62,29 @@ export default function ResultScreen({ navigation, route }: Props) {
     try {
       const result = await shareImage(processedUri);
       if (result.ok) {
+        hapticLight();
         return;
       }
 
       if (result.reason === 'sharing_unavailable') {
-        setStatusMessage('Sharing is not available on this device.');
+        setStatus('Sharing is not available on this device.', 'error');
         return;
       }
 
       if (result.reason === 'error') {
-        setStatusMessage(result.message);
+        setStatus(result.message, 'error');
       }
     } finally {
       setBusyAction(null);
     }
   }
+
+  const statusStyle =
+    statusKind === 'success'
+      ? styles.statusSuccess
+      : statusKind === 'error'
+        ? styles.statusError
+        : styles.status;
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
@@ -112,7 +131,7 @@ export default function ResultScreen({ navigation, route }: Props) {
         />
 
         {statusMessage ? (
-          <Text style={styles.status}>{statusMessage}</Text>
+          <Text style={statusStyle}>{statusMessage}</Text>
         ) : null}
 
         <View style={styles.actions}>
@@ -134,7 +153,7 @@ export default function ResultScreen({ navigation, route }: Props) {
         </View>
 
         <AppButton
-          label="Scan Another"
+          label="New scan"
           variant="outline"
           onPress={() => navigation.popToTop()}
           disabled={busy}
@@ -194,6 +213,19 @@ const styles = StyleSheet.create({
   status: {
     ...typography.caption,
     color: colors.textMuted,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+  },
+  statusSuccess: {
+    ...typography.caption,
+    color: colors.success,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+    fontWeight: '600',
+  },
+  statusError: {
+    ...typography.caption,
+    color: colors.error,
     textAlign: 'center',
     marginBottom: spacing.md,
   },

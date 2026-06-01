@@ -24,7 +24,7 @@ export default function AppNavigator() {
       <Stack.Screen
         name="Home"
         component={HomeScreen}
-        options={{ title: 'Pixel It' }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="Adjust"

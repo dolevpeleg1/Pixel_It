@@ -1,10 +1,15 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppButton from '../components/AppButton';
+import OnboardingModal from '../components/OnboardingModal';
 import type { RootStackParamList } from '../types';
 import { colors, radii, spacing, typography } from '../theme';
+import {
+  hasCompletedOnboarding,
+  markOnboardingComplete,
+} from '../utils/onboardingStorage';
 import { pickFromCamera, pickFromLibrary } from '../utils/pickPhoto';
 import { verifyOpenCVLoaded } from '../utils/verifyOpenCV';
 
@@ -25,6 +30,24 @@ export default function HomeScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [opencvStatus, setOpencvStatus] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    void hasCompletedOnboarding().then((completed) => {
+      if (!isMounted) {
+        return;
+      }
+      if (!completed) {
+        setShowOnboarding(true);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!__DEV__) {
@@ -51,6 +74,11 @@ export default function HomeScreen({ navigation }: Props) {
       isMounted = false;
     };
   }, []);
+
+  async function handleOnboardingComplete() {
+    await markOnboardingComplete();
+    setShowOnboarding(false);
+  }
 
   async function handlePick(source: 'camera' | 'library') {
     setErrorMessage(null);
@@ -88,8 +116,14 @@ export default function HomeScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
+      <View style={styles.glowTop} pointerEvents="none" />
       <View style={styles.container}>
         <View style={styles.hero}>
+          <Image
+            source={require('../../assets/icon.png')}
+            style={styles.appIcon}
+            accessibilityLabel="Pixel It app icon"
+          />
           <NeonAccentBar />
           <Text style={styles.title}>Pixel It</Text>
           <Text style={styles.subtitle}>
@@ -118,6 +152,11 @@ export default function HomeScreen({ navigation }: Props) {
           <Text style={styles.devStatus}>{opencvStatus}</Text>
         ) : null}
       </View>
+
+      <OnboardingModal
+        visible={showOnboarding}
+        onComplete={() => void handleOnboardingComplete()}
+      />
     </SafeAreaView>
   );
 }
@@ -127,6 +166,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  glowTop: {
+    position: 'absolute',
+    top: -120,
+    right: -80,
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    backgroundColor: colors.neon.violet,
+    opacity: 0.12,
+  },
   container: {
     flex: 1,
     paddingHorizontal: spacing.xl,
@@ -135,6 +184,12 @@ const styles = StyleSheet.create({
   },
   hero: {
     marginBottom: spacing.xxl,
+  },
+  appIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: radii.lg,
+    marginBottom: spacing.lg,
   },
   accentRow: {
     flexDirection: 'row',

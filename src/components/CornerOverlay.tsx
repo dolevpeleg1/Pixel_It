@@ -1,5 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Image, LayoutChangeEvent, StyleSheet, View } from 'react-native';
+import { Image, LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import type { CornerKey, CornerSet, Point } from '../types';
 import { CORNER_KEYS } from '../types';
 import {
@@ -7,15 +14,19 @@ import {
   imageToScreen,
   type ImageLayout,
 } from '../utils/imageCoords';
-import { colors, radii } from '../theme';
+import { colors, radii, spacing, typography } from '../theme';
 import DraggableHandle from './DraggableHandle';
 import QuadLine from './QuadLine';
+
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 4;
 
 type Props = {
   photoUri: string;
   imageWidth: number;
   imageHeight: number;
   corners: CornerSet;
+  editable?: boolean;
   onCornersChange: (corners: CornerSet) => void;
 };
 
@@ -24,9 +35,18 @@ export default function CornerOverlay({
   imageWidth,
   imageHeight,
   corners,
+  editable = true,
   onCornersChange,
 }: Props) {
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const [zoomScale, setZoomScale] = useState(1);
+
+  const scale = useSharedValue(1);
+  const savedScale = useSharedValue(1);
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const savedTranslateX = useSharedValue(0);
+  const savedTranslateY = useSharedValue(0);
 
   const layout: ImageLayout | null = useMemo(() => {
     if (containerSize.width === 0 || containerSize.height === 0) {
@@ -52,13 +72,55 @@ export default function CornerOverlay({
     };
   }, [corners, layout]);
 
+  const pinchGesture = Gesture.Pinch()
+    .enabled(editable)
+    .onUpdate((event) => {
+      const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, savedScale.value * event.scale));
+      scale.value = next;
+      runOnJS(setZoomScale)(next);
+    })
+    .onEnd(() => {
+      savedScale.value = scale.value;
+      if (scale.value <= 1.02) {
+        scale.value = withTiming(1);
+        savedScale.value = 1;
+        translateX.value = withTiming(0);
+        translateY.value = withTiming(0);
+        savedTranslateX.value = 0;
+        savedTranslateY.value = 0;
+        runOnJS(setZoomScale)(1);
+      }
+    });
+
+  const panGesture = Gesture.Pan()
+    .enabled(editable)
+    .minPointers(2)
+    .onUpdate((event) => {
+      translateX.value = savedTranslateX.value + event.translationX;
+      translateY.value = savedTranslateY.value + event.translationY;
+    })
+    .onEnd(() => {
+      savedTranslateX.value = translateX.value;
+      savedTranslateY.value = translateY.value;
+    });
+
+  const zoomGesture = Gesture.Simultaneous(pinchGesture, panGesture);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { scale: scale.value },
+    ],
+  }));
+
   function handleLayout(event: LayoutChangeEvent) {
     const { width, height } = event.nativeEvent.layout;
     setContainerSize({ width, height });
   }
 
   function handleCornerMove(key: CornerKey, screenX: number, screenY: number) {
-    if (!layout) {
+    if (!layout || !editable) {
       return;
     }
 
@@ -84,25 +146,38 @@ export default function CornerOverlay({
 
   return (
     <View style={styles.container} onLayout={handleLayout}>
-      <Image
-        source={{ uri: photoUri }}
-        style={styles.image}
-        resizeMode="contain"
-      />
-      {screenCorners && quadPoints ? (
-        <View style={styles.overlay} pointerEvents="box-none">
-          <QuadLine from={quadPoints[0]} to={quadPoints[1]} />
-          <QuadLine from={quadPoints[1]} to={quadPoints[2]} />
-          <QuadLine from={quadPoints[2]} to={quadPoints[3]} />
-          <QuadLine from={quadPoints[3]} to={quadPoints[0]} />
-          {CORNER_KEYS.map((key) => (
-            <DraggableHandle
-              key={key}
-              screenX={screenCorners[key].x}
-              screenY={screenCorners[key].y}
-              onMove={(x, y) => handleCornerMove(key, x, y)}
-            />
-          ))}
+      <GestureDetector gesture={zoomGesture}>
+        <Animated.View style={[styles.zoomLayer, animatedStyle]}>
+          <Image
+            source={{ uri: photoUri }}
+            style={styles.image}
+            resizeMode="contain"
+          />
+          {screenCorners && quadPoints ? (
+            <View style={styles.overlay} pointerEvents="box-none">
+              <QuadLine from={quadPoints[0]} to={quadPoints[1]} />
+              <QuadLine from={quadPoints[1]} to={quadPoints[2]} />
+              <QuadLine from={quadPoints[2]} to={quadPoints[3]} />
+              <QuadLine from={quadPoints[3]} to={quadPoints[0]} />
+              {CORNER_KEYS.map((key) => (
+                <DraggableHandle
+                  key={key}
+                  cornerKey={key}
+                  screenX={screenCorners[key].x}
+                  screenY={screenCorners[key].y}
+                  zoomScale={zoomScale}
+                  enabled={editable}
+                  onMove={(x, y) => handleCornerMove(key, x, y)}
+                />
+              ))}
+            </View>
+          ) : null}
+        </Animated.View>
+      </GestureDetector>
+
+      {editable && zoomScale > 1 ? (
+        <View style={styles.zoomHint} pointerEvents="none">
+          <Text style={styles.zoomHintText}>Pinch · two-finger pan</Text>
         </View>
       ) : null}
     </View>
@@ -116,10 +191,26 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     overflow: 'hidden',
   },
+  zoomLayer: {
+    flex: 1,
+  },
   image: {
     ...StyleSheet.absoluteFillObject,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
+  },
+  zoomHint: {
+    position: 'absolute',
+    bottom: spacing.sm,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.full,
+  },
+  zoomHintText: {
+    ...typography.small,
+    color: colors.textMuted,
   },
 });

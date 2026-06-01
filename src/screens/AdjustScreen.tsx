@@ -16,11 +16,13 @@ type DetectionSource = 'auto' | 'default';
 
 export default function AdjustScreen({ navigation, route }: Props) {
   const { photoUri, imageWidth, imageHeight } = route.params;
-  const [imageSize, setImageSize] = useState<{
-    width: number;
-    height: number;
-  } | null>(null);
-  const [corners, setCorners] = useState<CornerSet | null>(null);
+  const [imageSize, setImageSize] = useState({
+    width: imageWidth,
+    height: imageHeight,
+  });
+  const [corners, setCorners] = useState<CornerSet>(() =>
+    defaultCorners(imageWidth, imageHeight),
+  );
   const [detecting, setDetecting] = useState(true);
   const [detectionSource, setDetectionSource] = useState<DetectionSource | null>(
     null,
@@ -51,7 +53,6 @@ export default function AdjustScreen({ navigation, route }: Props) {
       }
 
       setDetecting(true);
-      setCorners(null);
       setDetectionSource(null);
       setProcessError(null);
 
@@ -89,6 +90,14 @@ export default function AdjustScreen({ navigation, route }: Props) {
       return;
     }
     await runDetection(photoUri, imageSize.width, imageSize.height);
+  }
+
+  function handleResetCorners() {
+    if (!imageSize || detecting || processing) {
+      return;
+    }
+    setCorners(defaultCorners(imageSize.width, imageSize.height));
+    setDetectionSource('default');
   }
 
   async function handleProcess() {
@@ -136,7 +145,14 @@ export default function AdjustScreen({ navigation, route }: Props) {
     ? 'Finding corners…'
     : detectionSource === 'auto'
       ? 'Corners detected automatically. Drag to fine-tune.'
-      : "Couldn't detect edges — adjust the corners manually.";
+      : "Couldn't detect edges — drag each corner to the screen edges.";
+
+  const hintStyle =
+    !detecting && detectionSource === 'auto'
+      ? styles.hintSuccess
+      : !detecting && detectionSource === 'default'
+        ? styles.hintWarning
+        : styles.hint;
 
   const busy = processing || detecting;
 
@@ -144,42 +160,54 @@ export default function AdjustScreen({ navigation, route }: Props) {
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <View style={styles.container}>
         <View style={styles.imageArea}>
-          {detecting || !imageSize || !corners ? (
-            <View style={styles.loadingBox}>
+          <CornerOverlay
+            photoUri={photoUri}
+            imageWidth={imageSize.width}
+            imageHeight={imageSize.height}
+            corners={corners}
+            editable={!detecting && !processing}
+            onCornersChange={setCorners}
+          />
+          {detecting ? (
+            <View style={styles.detectingOverlay} pointerEvents="none">
               <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={styles.loadingText}>Finding corners…</Text>
+              <Text style={styles.detectingText}>Finding corners…</Text>
             </View>
-          ) : (
-            <CornerOverlay
-              photoUri={photoUri}
-              imageWidth={imageSize.width}
-              imageHeight={imageSize.height}
-              corners={corners}
-              onCornersChange={setCorners}
-            />
-          )}
+          ) : null}
         </View>
 
-        <Text style={styles.hint}>{hintText}</Text>
+        <Text style={hintStyle}>{hintText}</Text>
+        {!detecting && detectionSource === 'default' ? (
+          <Text style={styles.tip}>
+            Tip: pinch to zoom, use two fingers to pan, and leave a margin around
+            the screen.
+          </Text>
+        ) : null}
 
         {processError ? <Text style={styles.error}>{processError}</Text> : null}
 
-        <View style={styles.actions}>
+        <View style={styles.secondaryActions}>
+          <AppButton
+            label="Reset"
+            variant="outline"
+            onPress={handleResetCorners}
+            disabled={busy}
+            style={styles.secondaryButton}
+          />
           <AppButton
             label="Detect again"
             variant="secondary"
             onPress={() => void handleDetectAgain()}
-            disabled={busy || !corners}
-            style={styles.actionButton}
-          />
-          <AppButton
-            label="Process"
-            onPress={() => void handleProcess()}
-            loading={processing}
-            disabled={busy || !corners}
-            style={styles.actionButton}
+            disabled={busy}
+            style={styles.secondaryButton}
           />
         </View>
+        <AppButton
+          label={processing ? 'Processing…' : 'Process'}
+          onPress={() => void handleProcess()}
+          loading={processing}
+          disabled={busy}
+        />
       </View>
     </SafeAreaView>
   );
@@ -204,21 +232,41 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  loadingBox: {
-    flex: 1,
+  detectingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.45)',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.md,
   },
-  loadingText: {
+  detectingText: {
     ...typography.caption,
-    color: colors.textMuted,
+    color: colors.text,
   },
   hint: {
     ...typography.caption,
     color: colors.textSubtle,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  hintSuccess: {
+    ...typography.caption,
+    color: colors.success,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  hintWarning: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  tip: {
+    ...typography.small,
+    color: colors.textSubtle,
     marginBottom: spacing.md,
     textAlign: 'center',
+    lineHeight: 18,
   },
   error: {
     ...typography.caption,
@@ -226,11 +274,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: spacing.md,
   },
-  actions: {
+  secondaryActions: {
     flexDirection: 'row',
     gap: spacing.md,
+    marginBottom: spacing.md,
   },
-  actionButton: {
+  secondaryButton: {
     flex: 1,
   },
 });
