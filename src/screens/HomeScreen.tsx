@@ -1,14 +1,42 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { RootStackParamList } from '../types';
 import { pickFromCamera, pickFromLibrary } from '../utils/pickPhoto';
+import { verifyOpenCVLoaded } from '../utils/verifyOpenCV';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 export default function HomeScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [opencvStatus, setOpencvStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!__DEV__) {
+      return;
+    }
+
+    let isMounted = true;
+
+    void verifyOpenCVLoaded().then((result) => {
+      if (!isMounted) {
+        return;
+      }
+
+      if (result.ok) {
+        setOpencvStatus('OpenCV ready');
+        console.log('[Pixel It] OpenCV module loaded successfully.');
+      } else {
+        setOpencvStatus('OpenCV unavailable (dev client required)');
+        console.warn('[Pixel It] OpenCV check failed:', result.message);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   async function handlePick(source: 'camera' | 'library') {
     setErrorMessage(null);
@@ -63,6 +91,8 @@ export default function HomeScreen({ navigation }: Props) {
       >
         <Text style={styles.buttonSecondaryText}>Choose from Library</Text>
       </Pressable>
+
+      {opencvStatus ? <Text style={styles.devStatus}>{opencvStatus}</Text> : null}
     </View>
   );
 }
@@ -122,5 +152,11 @@ const styles = StyleSheet.create({
     color: '#111',
     fontSize: 16,
     fontWeight: '600',
+  },
+  devStatus: {
+    marginTop: 24,
+    fontSize: 12,
+    color: '#888',
+    textAlign: 'center',
   },
 });
