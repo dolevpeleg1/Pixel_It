@@ -160,6 +160,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     padding: spacing.xs,
     marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   toggleButton: {
     flex: 1,
@@ -169,6 +171,8 @@ const styles = StyleSheet.create({
   },
   toggleButtonActive: {
     backgroundColor: colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: colors.borderNeon,
   },
   toggleText: {
     ...typography.caption,
@@ -184,6 +188,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.imageBackdrop,
     borderRadius: radii.lg,
     marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   status: {
     ...typography.caption,

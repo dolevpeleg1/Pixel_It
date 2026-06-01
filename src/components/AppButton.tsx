@@ -7,7 +7,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { colors, radii, typography } from '../theme';
+import { colors, radii, shadows, typography } from '../theme';
 
 type Variant = 'primary' | 'secondary' | 'outline';
 
@@ -33,6 +33,7 @@ export default function AppButton({
       style={({ pressed }) => [
         styles.base,
         styles[variant],
+        variant === 'primary' && shadows.neonPrimary,
         pressed && !isDisabled && styles.pressed,
         isDisabled && styles.disabled,
         style,
@@ -42,7 +43,9 @@ export default function AppButton({
     >
       {loading ? (
         <ActivityIndicator
-          color={variant === 'primary' ? colors.background : colors.primary}
+          color={
+            variant === 'primary' ? colors.text : colors.primary
+          }
         />
       ) : (
         <Text style={[styles.label, styles[`${variant}Label`]]}>{label}</Text>
@@ -65,6 +68,8 @@ const styles = StyleSheet.create({
   },
   secondary: {
     backgroundColor: colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: colors.borderNeon,
   },
   outline: {
     backgroundColor: 'transparent',
@@ -81,12 +86,12 @@ const styles = StyleSheet.create({
     ...typography.button,
   },
   primaryLabel: {
-    color: colors.background,
+    color: colors.text,
   },
   secondaryLabel: {
     color: colors.text,
   },
   outlineLabel: {
-    color: colors.text,
+    color: colors.textMuted,
   },
 });

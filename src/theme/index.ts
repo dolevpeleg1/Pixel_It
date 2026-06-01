@@ -1,21 +1,32 @@
+/** Matches app icon: soft black + rainbow neon accents */
 export const colors = {
-  background: '#0f0e17',
-  surface: '#1a1828',
-  surfaceElevated: '#252238',
-  primary: '#22d3ee',
-  primaryMuted: '#0891b2',
-  text: '#f4f4f5',
-  textMuted: '#a1a1aa',
-  textSubtle: '#71717a',
-  border: '#3f3d56',
-  error: '#f87171',
-  overlayLine: '#22d3ee',
-  overlayHandle: '#22d3ee',
-  overlayHandleBorder: '#f4f4f5',
-  headerBackground: '#0f0e17',
-  headerTint: '#f4f4f5',
-  imageBackdrop: '#12111c',
-  devStatus: '#71717a',
+  background: '#1A1A1A',
+  surface: '#242424',
+  surfaceElevated: '#2E2E2E',
+  primary: '#FF4DAD',
+  primaryAlt: '#00E5FF',
+  primaryMuted: '#C93D8F',
+  text: '#FAFAFA',
+  textMuted: '#B3B3B3',
+  textSubtle: '#7A7A7A',
+  border: '#3D3D3D',
+  borderNeon: 'rgba(255, 77, 173, 0.4)',
+  error: '#FF6B6B',
+  success: '#7CFF9E',
+  overlayLine: '#FFFFFF',
+  overlayLineGlow: '#00E5FF',
+  overlayHandle: '#FFFFFF',
+  overlayHandleBorder: '#FF4DAD',
+  headerBackground: '#1A1A1A',
+  headerTint: '#FAFAFA',
+  imageBackdrop: '#141414',
+  devStatus: '#666666',
+  neon: {
+    magenta: '#FF4DAD',
+    cyan: '#00E5FF',
+    lime: '#B8FF3C',
+    violet: '#A78BFA',
+  },
 } as const;
 
 export const spacing = {
@@ -32,6 +43,23 @@ export const radii = {
   md: 10,
   lg: 14,
   full: 999,
+} as const;
+
+export const shadows = {
+  neonPrimary: {
+    shadowColor: colors.neon.magenta,
+    shadowOpacity: 0.45,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+  },
+  neonSubtle: {
+    shadowColor: colors.neon.cyan,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 4,
+  },
 } as const;
 
 export const typography = {

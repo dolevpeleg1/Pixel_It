@@ -146,7 +146,7 @@ export default function AdjustScreen({ navigation, route }: Props) {
         <View style={styles.imageArea}>
           {detecting || !imageSize || !corners ? (
             <View style={styles.loadingBox}>
-              <ActivityIndicator size="large" color={colors.primary} />
+              <ActivityIndicator size="large" color={colors.neon.cyan} />
               <Text style={styles.loadingText}>Finding corners…</Text>
             </View>
           ) : (
@@ -201,6 +201,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     overflow: 'hidden',
     backgroundColor: colors.imageBackdrop,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   loadingBox: {
     flex: 1,

@@ -56,6 +56,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.overlayHandle,
     borderWidth: 3,
     borderColor: colors.overlayHandleBorder,
+    shadowColor: colors.neon.cyan,
+    shadowOpacity: 0.7,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 0 },
     zIndex: 10,
   },
 });

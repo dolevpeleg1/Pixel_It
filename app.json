@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "backgroundColor": "#0f0e17",
+    "backgroundColor": "#1A1A1A",
     "scheme": "pixel-it",
     "ios": {
       "supportsTablet": false,
@@ -21,7 +21,7 @@
     "android": {
       "package": "com.pixelit.app",
       "adaptiveIcon": {
-        "backgroundColor": "#0f0e17",
+        "backgroundColor": "#1A1A1A",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"

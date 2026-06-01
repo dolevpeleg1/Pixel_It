@@ -4,11 +4,22 @@ import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppButton from '../components/AppButton';
 import type { RootStackParamList } from '../types';
-import { colors, spacing, typography } from '../theme';
+import { colors, radii, spacing, typography } from '../theme';
 import { pickFromCamera, pickFromLibrary } from '../utils/pickPhoto';
 import { verifyOpenCVLoaded } from '../utils/verifyOpenCV';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
+
+function NeonAccentBar() {
+  return (
+    <View style={styles.accentRow}>
+      <View style={[styles.accentSegment, { backgroundColor: colors.neon.magenta }]} />
+      <View style={[styles.accentSegment, { backgroundColor: colors.neon.cyan }]} />
+      <View style={[styles.accentSegment, { backgroundColor: colors.neon.lime }]} />
+      <View style={[styles.accentSegment, { backgroundColor: colors.neon.violet }]} />
+    </View>
+  );
+}
 
 export default function HomeScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
@@ -79,6 +90,7 @@ export default function HomeScreen({ navigation }: Props) {
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <View style={styles.container}>
         <View style={styles.hero}>
+          <NeonAccentBar />
           <Text style={styles.title}>Pixel It</Text>
           <Text style={styles.subtitle}>
             Turn a photo of any screen into a clean, flat screenshot.
@@ -123,6 +135,17 @@ const styles = StyleSheet.create({
   },
   hero: {
     marginBottom: spacing.xxl,
+  },
+  accentRow: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    marginBottom: spacing.lg,
+    width: 72,
+  },
+  accentSegment: {
+    flex: 1,
+    height: 3,
+    borderRadius: radii.full,
   },
   title: {
     ...typography.title,
