@@ -1,6 +1,7 @@
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import type { SharedValue } from 'react-native-reanimated';
 import type { CornerKey } from '../types';
 import { colors } from '../theme';
 
@@ -17,9 +18,9 @@ type Props = {
   cornerKey: CornerKey;
   screenX: number;
   screenY: number;
-  zoomScale: number;
+  zoomScale: SharedValue<number>;
   enabled: boolean;
-  onMove: (x: number, y: number) => void;
+  onMove: (key: CornerKey, x: number, y: number) => void;
 };
 
 export default function DraggableHandle({
@@ -31,27 +32,38 @@ export default function DraggableHandle({
   onMove,
 }: Props) {
   const origin = useRef({ x: screenX, y: screenY });
+  const onMoveRef = useRef(onMove);
+  const screenPosRef = useRef({ x: screenX, y: screenY });
 
-  const gesture = Gesture.Pan()
-    .enabled(enabled)
-    .runOnJS(true)
-    .onBegin(() => {
-      origin.current = { x: screenX, y: screenY };
-    })
-    .onUpdate((event) => {
-      const factor = zoomScale > 0 ? zoomScale : 1;
-      onMove(
-        origin.current.x + event.translationX / factor,
-        origin.current.y + event.translationY / factor,
-      );
-    })
-    .onEnd((event) => {
-      const factor = zoomScale > 0 ? zoomScale : 1;
-      onMove(
-        origin.current.x + event.translationX / factor,
-        origin.current.y + event.translationY / factor,
-      );
-    });
+  onMoveRef.current = onMove;
+  screenPosRef.current = { x: screenX, y: screenY };
+
+  const gesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .enabled(enabled)
+        .runOnJS(true)
+        .onBegin(() => {
+          origin.current = { ...screenPosRef.current };
+        })
+        .onUpdate((event) => {
+          const factor = zoomScale.value > 0 ? zoomScale.value : 1;
+          onMoveRef.current(
+            cornerKey,
+            origin.current.x + event.translationX / factor,
+            origin.current.y + event.translationY / factor,
+          );
+        })
+        .onEnd((event) => {
+          const factor = zoomScale.value > 0 ? zoomScale.value : 1;
+          onMoveRef.current(
+            cornerKey,
+            origin.current.x + event.translationX / factor,
+            origin.current.y + event.translationY / factor,
+          );
+        }),
+    [cornerKey, enabled, zoomScale],
+  );
 
   return (
     <GestureDetector gesture={gesture}>

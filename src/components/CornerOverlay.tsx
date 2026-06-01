@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Image, LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -48,6 +48,11 @@ export default function CornerOverlay({
   const savedTranslateX = useSharedValue(0);
   const savedTranslateY = useSharedValue(0);
 
+  const layoutRef = useRef<ImageLayout | null>(null);
+  const cornersRef = useRef(corners);
+  const editableRef = useRef(editable);
+  const onCornersChangeRef = useRef(onCornersChange);
+
   const layout: ImageLayout | null = useMemo(() => {
     if (containerSize.width === 0 || containerSize.height === 0) {
       return null;
@@ -59,6 +64,11 @@ export default function CornerOverlay({
       imageHeight,
     };
   }, [containerSize, imageWidth, imageHeight]);
+
+  layoutRef.current = layout;
+  cornersRef.current = corners;
+  editableRef.current = editable;
+  onCornersChangeRef.current = onCornersChange;
 
   const screenCorners = useMemo(() => {
     if (!layout) {
@@ -72,67 +82,88 @@ export default function CornerOverlay({
     };
   }, [corners, layout]);
 
-  const pinchGesture = Gesture.Pinch()
-    .enabled(editable)
-    .onUpdate((event) => {
-      const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, savedScale.value * event.scale));
-      scale.value = next;
-      runOnJS(setZoomScale)(next);
-    })
-    .onEnd(() => {
-      savedScale.value = scale.value;
-      if (scale.value <= 1.02) {
-        scale.value = withTiming(1);
-        savedScale.value = 1;
-        translateX.value = withTiming(0);
-        translateY.value = withTiming(0);
-        savedTranslateX.value = 0;
-        savedTranslateY.value = 0;
-        runOnJS(setZoomScale)(1);
+  const pinchGesture = useMemo(
+    () =>
+      Gesture.Pinch()
+        .enabled(editable)
+        .onUpdate((event) => {
+          const next = Math.min(
+            MAX_ZOOM,
+            Math.max(MIN_ZOOM, savedScale.value * event.scale),
+          );
+          scale.value = next;
+          runOnJS(setZoomScale)(next);
+        })
+        .onEnd(() => {
+          savedScale.value = scale.value;
+          if (scale.value <= 1.02) {
+            scale.value = withTiming(1);
+            savedScale.value = 1;
+            translateX.value = withTiming(0);
+            translateY.value = withTiming(0);
+            savedTranslateX.value = 0;
+            savedTranslateY.value = 0;
+            runOnJS(setZoomScale)(1);
+          }
+        }),
+    [editable, savedScale, scale, translateX, translateY, savedTranslateX, savedTranslateY],
+  );
+
+  const panGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .enabled(editable)
+        .minPointers(2)
+        .onUpdate((event) => {
+          translateX.value = savedTranslateX.value + event.translationX;
+          translateY.value = savedTranslateY.value + event.translationY;
+        })
+        .onEnd(() => {
+          savedTranslateX.value = translateX.value;
+          savedTranslateY.value = translateY.value;
+        }),
+    [editable, translateX, translateY, savedTranslateX, savedTranslateY],
+  );
+
+  const zoomGesture = useMemo(
+    () => Gesture.Simultaneous(pinchGesture, panGesture),
+    [pinchGesture, panGesture],
+  );
+
+  const animatedStyle = useAnimatedStyle(
+    () => ({
+      transform: [
+        { translateX: translateX.value },
+        { translateY: translateY.value },
+        { scale: scale.value },
+      ],
+    }),
+    [translateX, translateY, scale],
+  );
+
+  const handleCornerMove = useCallback(
+    (key: CornerKey, screenX: number, screenY: number) => {
+      const currentLayout = layoutRef.current;
+      if (!currentLayout || !editableRef.current) {
+        return;
       }
-    });
 
-  const panGesture = Gesture.Pan()
-    .enabled(editable)
-    .minPointers(2)
-    .onUpdate((event) => {
-      translateX.value = savedTranslateX.value + event.translationX;
-      translateY.value = savedTranslateY.value + event.translationY;
-    })
-    .onEnd(() => {
-      savedTranslateX.value = translateX.value;
-      savedTranslateY.value = translateY.value;
-    });
+      const imagePoint = clampScreenToImagePoint(
+        { x: screenX, y: screenY },
+        currentLayout,
+      );
 
-  const zoomGesture = Gesture.Simultaneous(pinchGesture, panGesture);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-      { scale: scale.value },
-    ],
-  }));
+      onCornersChangeRef.current({
+        ...cornersRef.current,
+        [key]: imagePoint,
+      });
+    },
+    [],
+  );
 
   function handleLayout(event: LayoutChangeEvent) {
     const { width, height } = event.nativeEvent.layout;
     setContainerSize({ width, height });
-  }
-
-  function handleCornerMove(key: CornerKey, screenX: number, screenY: number) {
-    if (!layout || !editable) {
-      return;
-    }
-
-    const imagePoint = clampScreenToImagePoint(
-      { x: screenX, y: screenY },
-      layout,
-    );
-
-    onCornersChange({
-      ...corners,
-      [key]: imagePoint,
-    });
   }
 
   const quadPoints: Point[] | null = screenCorners
@@ -165,9 +196,9 @@ export default function CornerOverlay({
                   cornerKey={key}
                   screenX={screenCorners[key].x}
                   screenY={screenCorners[key].y}
-                  zoomScale={zoomScale}
+                  zoomScale={scale}
                   enabled={editable}
-                  onMove={(x, y) => handleCornerMove(key, x, y)}
+                  onMove={handleCornerMove}
                 />
               ))}
             </View>
