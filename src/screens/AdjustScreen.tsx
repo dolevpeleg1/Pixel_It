@@ -146,7 +146,7 @@ export default function AdjustScreen({ navigation, route }: Props) {
         <View style={styles.imageArea}>
           {detecting || !imageSize || !corners ? (
             <View style={styles.loadingBox}>
-              <ActivityIndicator size="large" color={colors.neon.cyan} />
+              <ActivityIndicator size="large" color={colors.primary} />
               <Text style={styles.loadingText}>Finding corners…</Text>
             </View>
           ) : (

@@ -44,7 +44,7 @@ export default function AppButton({
       {loading ? (
         <ActivityIndicator
           color={
-            variant === 'primary' ? colors.text : colors.primary
+            variant === 'primary' ? colors.onPrimary : colors.primary
           }
         />
       ) : (
@@ -72,9 +72,9 @@ const styles = StyleSheet.create({
     borderColor: colors.borderNeon,
   },
   outline: {
-    backgroundColor: 'transparent',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.primary,
   },
   pressed: {
     opacity: 0.88,
@@ -86,12 +86,12 @@ const styles = StyleSheet.create({
     ...typography.button,
   },
   primaryLabel: {
-    color: colors.text,
+    color: colors.onPrimary,
   },
   secondaryLabel: {
     color: colors.text,
   },
   outlineLabel: {
-    color: colors.textMuted,
+    color: colors.primary,
   },
 });
