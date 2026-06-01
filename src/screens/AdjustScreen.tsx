@@ -24,6 +24,7 @@ export default function AdjustScreen({ navigation, route }: Props) {
   const [corners, setCorners] = useState<CornerSet | null>(null);
   const [processing, setProcessing] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [processError, setProcessError] = useState<string | null>(null);
 
   useEffect(() => {
     setLoadError(null);
@@ -54,6 +55,7 @@ export default function AdjustScreen({ navigation, route }: Props) {
       return;
     }
 
+    setProcessError(null);
     setProcessing(true);
     try {
       const processedUri = await processImage(photoUri, corners);
@@ -61,6 +63,12 @@ export default function AdjustScreen({ navigation, route }: Props) {
         originalUri: photoUri,
         processedUri,
       });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Could not process this image.';
+      setProcessError(message);
     } finally {
       setProcessing(false);
     }
@@ -85,6 +93,8 @@ export default function AdjustScreen({ navigation, route }: Props) {
       </View>
 
       <Text style={styles.hint}>Drag the corners to match the screen edges.</Text>
+
+      {processError ? <Text style={styles.error}>{processError}</Text> : null}
 
       <View style={styles.actions}>
         <Pressable
