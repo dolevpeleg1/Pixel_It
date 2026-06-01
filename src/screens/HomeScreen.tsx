@@ -1,7 +1,10 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import AppButton from '../components/AppButton';
 import type { RootStackParamList } from '../types';
+import { colors, spacing, typography } from '../theme';
 import { pickFromCamera, pickFromLibrary } from '../utils/pickPhoto';
 import { verifyOpenCVLoaded } from '../utils/verifyOpenCV';
 
@@ -73,99 +76,75 @@ export default function HomeScreen({ navigation }: Props) {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Pixel It</Text>
-      <Text style={styles.subtitle}>
-        Turn a photo of any screen into a clean, flat screenshot.
-      </Text>
+    <SafeAreaView style={styles.safe} edges={['bottom']}>
+      <View style={styles.container}>
+        <View style={styles.hero}>
+          <Text style={styles.title}>Pixel It</Text>
+          <Text style={styles.subtitle}>
+            Turn a photo of any screen into a clean, flat screenshot.
+          </Text>
+        </View>
 
-      {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
+        {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
 
-      <Pressable
-        style={[styles.button, loading && styles.buttonDisabled]}
-        onPress={() => handlePick('camera')}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Take Photo</Text>
-        )}
-      </Pressable>
+        <View style={styles.actions}>
+          <AppButton
+            label="Take Photo"
+            onPress={() => void handlePick('camera')}
+            loading={loading}
+            disabled={loading}
+          />
+          <AppButton
+            label="Choose from Library"
+            variant="secondary"
+            onPress={() => void handlePick('library')}
+            disabled={loading}
+          />
+        </View>
 
-      <Pressable
-        style={[styles.buttonSecondary, loading && styles.buttonDisabled]}
-        onPress={() => handlePick('library')}
-        disabled={loading}
-      >
-        <Text style={styles.buttonSecondaryText}>Choose from Library</Text>
-      </Pressable>
-
-      {opencvStatus ? <Text style={styles.devStatus}>{opencvStatus}</Text> : null}
-    </View>
+        {opencvStatus ? (
+          <Text style={styles.devStatus}>{opencvStatus}</Text>
+        ) : null}
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   container: {
     flex: 1,
-    padding: 24,
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.xl,
     justifyContent: 'center',
-    backgroundColor: '#fff',
+  },
+  hero: {
+    marginBottom: spacing.xxl,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 8,
+    ...typography.title,
+    color: colors.text,
+    marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#555',
-    marginBottom: 32,
-    lineHeight: 22,
+    ...typography.body,
+    color: colors.textMuted,
   },
   error: {
-    fontSize: 14,
-    color: '#b00020',
-    marginBottom: 16,
-    lineHeight: 20,
+    ...typography.caption,
+    color: colors.error,
+    marginBottom: spacing.lg,
   },
-  button: {
-    backgroundColor: '#111',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginBottom: 12,
-    minHeight: 48,
-    justifyContent: 'center',
-  },
-  buttonSecondary: {
-    backgroundColor: '#f0f0f0',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    minHeight: 48,
-    justifyContent: 'center',
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  buttonSecondaryText: {
-    color: '#111',
-    fontSize: 16,
-    fontWeight: '600',
+  actions: {
+    gap: spacing.md,
   },
   devStatus: {
-    marginTop: 24,
-    fontSize: 12,
-    color: '#888',
+    ...typography.small,
+    color: colors.devStatus,
     textAlign: 'center',
+    marginTop: spacing.xxl,
   },
 });

@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { colors } from '../theme';
 
 export const HANDLE_SIZE = 28;
 
@@ -52,9 +53,9 @@ const styles = StyleSheet.create({
     width: HANDLE_SIZE,
     height: HANDLE_SIZE,
     borderRadius: HANDLE_SIZE / 2,
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.overlayHandle,
     borderWidth: 3,
-    borderColor: '#fff',
+    borderColor: colors.overlayHandleBorder,
     zIndex: 10,
   },
 });

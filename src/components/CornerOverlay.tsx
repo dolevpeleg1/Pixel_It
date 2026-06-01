@@ -7,6 +7,7 @@ import {
   imageToScreen,
   type ImageLayout,
 } from '../utils/imageCoords';
+import { colors, radii } from '../theme';
 import DraggableHandle from './DraggableHandle';
 import QuadLine from './QuadLine';
 
@@ -111,8 +112,8 @@ export default function CornerOverlay({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
+    backgroundColor: colors.imageBackdrop,
+    borderRadius: radii.lg,
     overflow: 'hidden',
   },
   image: {

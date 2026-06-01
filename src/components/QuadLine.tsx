@@ -1,12 +1,13 @@
 import { StyleSheet, View } from 'react-native';
 import type { Point } from '../types';
+import { colors } from '../theme';
 
 type Props = {
   from: Point;
   to: Point;
 };
 
-const LINE_HEIGHT = 2;
+const LINE_HEIGHT = 2.5;
 
 export default function QuadLine({ from, to }: Props) {
   const dx = to.x - from.x;
@@ -39,7 +40,11 @@ const styles = StyleSheet.create({
   line: {
     position: 'absolute',
     height: LINE_HEIGHT,
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.overlayLine,
+    shadowColor: colors.primary,
+    shadowOpacity: 0.6,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 0 },
     transformOrigin: 'left center',
   },
 });
